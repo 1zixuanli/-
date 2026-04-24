@@ -1,11 +1,12 @@
 【整项目如何跑通 — 按顺序做下面四步即可】
-  ① MySQL 保持运行（可用 tools\start-mysql-无需管理员.bat 启动用户模式 MySQL）。
-  ② 在 d:\mywork\src 执行一次数据库导入（若已导入过可跳过），任选其一：
+  ① 先准备 MySQL，并确认端口与密码和项目一致（当前默认是 3307 / Lzx040605）。
+     若你想改成自己的端口或密码，请同步修改 mysql-port.txt、mysql-password.txt 和 rail-backend\src\main\resources\application.yml。
+  ② 在项目根目录执行一次数据库导入（若已导入过可跳过），任选其一：
        npm run import:db
      或 powershell -ExecutionPolicy Bypass -File .\scripts\import-mysql.ps1
-     （会建库 rail_ticket 并写入车次/用户/演示订单；密码读 mysql-password.txt，须与 application.yml 一致）
+     （会建库 rail_ticket 并写入车次、用户、演示订单；仓库里已经附带完整 SQL：rail-backend\scripts\init_rail_ticket.sql）
   ③ 启动后端：双击 run-backend.bat（或 PowerShell：.\scripts\run-backend.ps1），看到 Started 且无报错。
-  ④ 新开终端，在 d:\mywork\src 执行 npm run dev，浏览器打开 http://localhost:5173
+  ④ 新开终端，在项目根目录执行 npm run dev，浏览器打开 http://localhost:5173
      登录：admin / admin123（或 demo / demo123）
   说明：前端里的「代理」会把地址里带 /api 的请求自动转到 http://localhost:8080 后端，无需你手写后端网址。
 
@@ -17,9 +18,10 @@
 二、MySQL 数据库一键初始化（推荐）
   1. 在项目根 src 目录执行：node scripts\gen-mysql-init.mjs
      （会生成 rail-backend\scripts\init_rail_ticket.sql：建库、建表、约 50 条车次、演示用户、几条演示订单）
-  2. 已为你生成 mysql-password.txt（当前为 Lzx040605）。若你改过密码，请编辑该文件第一行。
+  2. 复制 mysql-password.example.txt 为 mysql-password.txt，并在第一行写入你的 MySQL root 密码。
+     若你的 MySQL 不是 3307 端口，再新建 mysql-port.txt，第一行写你的端口，例如 3306。
   3. 执行：powershell -ExecutionPolicy Bypass -File .\scripts\import-mysql.ps1
-  4. 若 root 密码不是 root，请修改 rail-backend\src\main\resources\application.yml 里 spring.datasource.password，与 mysql-password.txt 一致。
+  4. 若端口或密码与默认值不同，请同步修改 rail-backend\src\main\resources\application.yml。
   5. 后端已关闭 spring.sql.init（建表以 import 的 SQL 为准）；若库被删空，请重新执行 npm run import:db。
 
 三、启动顺序（接上面数据库已就绪时）
