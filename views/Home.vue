@@ -1,7 +1,7 @@
 <template>
   <div class="home-page">
-    <header class="header">
-      <span class="logo">铁路车票系统</span>
+    <header class="header rail-topbar">
+      <span class="logo rail-brand">铁路车票系统</span>
       <span class="user">
         {{ username }}
         <el-button type="danger" link @click="logout">退出</el-button>
@@ -9,7 +9,7 @@
     </header>
     <main class="main">
       <!-- 车票查询区 -->
-      <section class="query-section">
+      <section class="query-section rail-panel">
         <div class="trip-type">
           <div
             class="trip-tab"
@@ -28,8 +28,8 @@
         </div>
 
         <div class="station-row">
-        <div class="station-box"@click="openCityPicker('from')">
-           <span class="station-value">{{fromCity || '请选择出发站'}}</span>
+        <div class="station-box" @click="openCityPicker('from')">
+           <span class="station-value">{{ fromCity || '请选择出发站' }}</span>
            <span class="station-arrow">›</span>
         </div>
           <div class="swap-btn" @click="swapStations" title="交换出发/到达">
@@ -69,8 +69,12 @@
         </el-button>
       </section>
 
-      <p>登录成功，欢迎使用铁路车票售卖系统。</p>
-      <p>后续可在此增加：车票列表、订单等入口。</p>
+      <section class="quick-nav">
+        <el-button type="primary" plain @click="goProfile">个人中心</el-button>
+        <el-button type="primary" plain @click="goOrders">我的订单</el-button>
+        <el-button v-if="isAdmin" type="warning" plain @click="goAdmin">管理后台</el-button>
+      </section>
+      <p class="welcome-tip">登录成功，可查询车次、预订车票并管理订单。</p>
     </main>
   </div>
 </template>
@@ -78,13 +82,16 @@
 import { computed, ref, onMounted, watch, inject } from 'vue'
 import { useRouter,useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import store from '../store'
+
 const router = useRouter()
 const route = useRoute()
-const username =computed(()=>localStorage.getItem('username')||'用户')
+const username = computed(() => localStorage.getItem('username') || '用户')
+const isAdmin = computed(() => localStorage.getItem('role') === 'admin')
 const tripType = ref('oneWay')           
 const fromCity = inject('fromCity') ?? ref('合肥')
 const toCity = inject('toCity') ?? ref('北京')               
-const travelDate = ref('2025-03-17')        
+const travelDate = ref(new Date().toISOString().slice(0, 10))
 const multiDayCommute = ref(false)       
 const ticketType = ref('normal')         
 const highSpeedOnly = ref(false)
@@ -122,16 +129,32 @@ function handleQuery(){
     ElMessage.warning('出发站和到达站不能相同')
     return
   }
-  router.push({path:'/trainList',query:{
-    from,to,date
-    highSpeedOnly:highSpeedOnly.value?'1':'0',
-    ticketType:ticketType.value,
-    }})
+  router.push({
+    path: '/trainList',
+    query: {
+      from,
+      to,
+      date,
+      highSpeedOnly: highSpeedOnly.value ? '1' : '0',
+      ticketType: ticketType.value
+    }
+  })
+}
+function goProfile() {
+  router.push('/profile')
+}
+function goOrders() {
+  router.push('/orders')
+}
+function goAdmin() {
+  router.push('/admin')
 }
 function logout() {
   localStorage.removeItem('token')
   localStorage.removeItem('userId')
   localStorage.removeItem('username')
+  localStorage.removeItem('role')
+  store.commit('CLEAR_USER')
   ElMessage.success('已退出')
   router.push('/login')
 }
@@ -140,61 +163,71 @@ function logout() {
 <style scoped>
 .home-page {
   min-height: 100vh;
-  background: #f5f5f5;
+  padding-bottom: 48px;
 }
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
-  background: #1a1a2e;
-  color: #fff;
-}
-.logo {
-  font-size: 18px;
-  font-weight: 600;
 }
 .user {
   display: flex;
   align-items: center;
   gap: 12px;
+  color: #e2e8f0;
+  font-size: 14px;
 }
 .main {
   padding: 24px;
   max-width: 800px;
   margin: 0 auto;
 }
-.main p {
+.quick-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.quick-nav :deep(.el-button) {
+  border-radius: 10px;
+  font-weight: 500;
+}
+.welcome-tip {
   margin: 8px 0;
-  color: #333;
+  color: #cbd5e1;
+  font-size: 14px;
 }
 
 .query-section {
-  background: #fff;
-  padding: 24px;
-  border-radius: 8px;
-  margin-bottom: 24px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 30px 28px;
+  margin-bottom: 28px;
 }
 .trip-type {
   display: flex;
-  gap: 0;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin-bottom: 22px;
 }
 .trip-tab {
-  padding: 8px 20px;
+  padding: 10px 22px;
   cursor: pointer;
-  background: #f0f0f0;
-  color: #666;
-  border-radius: 4px 4px 0 0;
+  background: rgba(15, 23, 42, 0.45);
+  color: #94a3b8;
+  border-radius: 12px;
   font-size: 14px;
+  font-weight: 500;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  transition: all 0.22s ease;
+}
+.trip-tab:hover {
+  color: #cbd5e1;
+  border-color: rgba(56, 189, 248, 0.25);
 }
 .trip-tab.active {
-  background: #fff;
-  color: #1a1a2e;
-  font-weight: 600;
-  border: 1px solid #e0e0e0;
-  border-bottom: none;
+  background: linear-gradient(145deg, rgba(56, 189, 248, 0.18), rgba(99, 102, 241, 0.12));
+  color: #f0f9ff;
+  font-weight: 700;
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.12);
 }
 .station-row {
   display: flex;
@@ -209,19 +242,25 @@ function logout() {
   font-size: 16px;
 }
 .swap-btn {
-  width: 40px;
-  height: 40px;
+  width: 46px;
+  height: 46px;
   flex-shrink: 0;
-  border: 1px solid #409eff;
+  border: 1px solid rgba(56, 189, 248, 0.35);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #409eff;
+  color: #7dd3fc;
+  background: linear-gradient(160deg, rgba(56, 189, 248, 0.12), rgba(15, 23, 42, 0.6));
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 .swap-btn:hover {
-  background: #ecf5ff;
+  border-color: rgba(56, 189, 248, 0.6);
+  color: #e0f2fe;
+  transform: scale(1.06) rotate(180deg);
+  box-shadow: 0 6px 28px rgba(56, 189, 248, 0.2);
 }
 .swap-icon {
   font-size: 18px;
@@ -238,7 +277,7 @@ function logout() {
 .commute-label {
   margin-left: 8px;
   font-size: 14px;
-  color: #333;
+  color: #94a3b8;
 }
 .filter-row {
   display: flex;
@@ -249,7 +288,8 @@ function logout() {
 }
 .filter-label {
   font-size: 14px;
-  color: #333;
+  color: #cbd5e1;
+  font-weight: 500;
 }
 .filter-row .ticket-type.radios {
   margin-right: 8px;
@@ -257,33 +297,39 @@ function logout() {
 .query-btn {
   width: 100%;
   font-size: 16px;
-  padding: 12px;
+  padding: 14px 12px;
+  border-radius: 14px !important;
+  letter-spacing: 0.2em;
 }
 .station-box {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
+  padding: 12px 16px;
+  border: 1px solid rgba(100, 116, 139, 0.35);
+  border-radius: 14px;
   cursor: pointer;
-  background: #fff;
-  min-height: 40px;
+  background: rgba(15, 23, 42, 0.5);
+  min-height: 48px;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 .station-box:hover {
-  border-color: #409eff;
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.15);
 }
 .station-value {
   font-size: 16px;
-  color: #1a1a2e;
+  color: #f1f5f9;
+  font-weight: 500;
 }
 .station-box .station-value:empty,
 .station-value:only-child {
-  color: #c0c4cc;
+  color: #64748b;
+  font-weight: 400;
 }
 .station-arrow {
-  color: #c0c4cc;
+  color: #64748b;
   font-size: 18px;
 }
 </style>

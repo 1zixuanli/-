@@ -1,14 +1,35 @@
 /**
- * 虚拟车次（仅一种车型：高铁/动车 G、D 字头）
- * 席别统一：二等座、一等座、商务座
+ * 虚拟车次（高铁/动车 G、D 字头）
+ * 席别：二等座、一等座、商务座、无座（对齐开题票型表）
  * fromStation / toStation 与城市选择器中的名称一致
  */
+const KEY_DELETED = 'rail_mock_deleted_train_ids'
+const KEY_CUSTOM = 'rail_mock_custom_trains'
 
-function seats(secondPrice, firstPrice, businessPrice, s, f, b) {
+function readLs(key, fb) {
+  try {
+    const r = localStorage.getItem(key)
+    return r ? JSON.parse(r) : fb
+  } catch {
+    return fb
+  }
+}
+
+export function seats(secondPrice, firstPrice, businessPrice, s, f, b, noneRemain) {
+  const n =
+    noneRemain !== undefined
+      ? noneRemain
+      : Math.min(350, Math.max(15, s + f + b + 25))
   return [
     { seatType: 'second', seatName: '二等座', price: secondPrice, remainCount: s },
     { seatType: 'first', seatName: '一等座', price: firstPrice, remainCount: f },
-    { seatType: 'business', seatName: '商务座', price: businessPrice, remainCount: b }
+    { seatType: 'business', seatName: '商务座', price: businessPrice, remainCount: b },
+    {
+      seatType: 'none',
+      seatName: '无座',
+      price: Math.round(secondPrice * 0.52),
+      remainCount: n
+    }
   ]
 }
 
@@ -114,13 +135,46 @@ export const MOCK_TRAIN_SCHEDULE = [
   { trainId: 'G-SH-NJ-01', trainNo: 'G7002', fromStation: '上海', toStation: '南京', departTime: '07:00', arriveTime: '08:39', duration: '1小时39分', seatTypes: seats(139, 223, 417, 220, 42, 9) }
 ]
 
+/** 合并内置车次、管理端新增车次，并排除已删除 */
+export function getMergedSchedule() {
+  const deleted = new Set(readLs(KEY_DELETED, []))
+  const custom = readLs(KEY_CUSTOM, [])
+  const base = MOCK_TRAIN_SCHEDULE.filter((row) => !deleted.has(row.trainId))
+  return [...base, ...custom]
+}
+
 export function filterMockTrains({ from, to, highSpeedOnly }) {
   const f = (from || '').trim()
   const t = (to || '').trim()
-  let list = MOCK_TRAIN_SCHEDULE.filter((row) => row.fromStation === f && row.toStation === t)
+  let list = getMergedSchedule().filter((row) => row.fromStation === f && row.toStation === t)
   const onlyHighSpeed = highSpeedOnly === true || highSpeedOnly === 'true' || highSpeedOnly === '1'
   if (onlyHighSpeed) {
     list = list.filter((row) => /^[GDC]\d*/.test(row.trainNo))
   }
   return list.sort((a, b) => a.departTime.localeCompare(b.departTime))
+}
+
+export function getDeletedTrainIds() {
+  return readLs(KEY_DELETED, [])
+}
+
+export function deleteTrainById(trainId) {
+  const d = [...getDeletedTrainIds()]
+  if (!d.includes(trainId)) d.push(trainId)
+  localStorage.setItem(KEY_DELETED, JSON.stringify(d))
+}
+
+export function getCustomTrains() {
+  return readLs(KEY_CUSTOM, [])
+}
+
+export function addCustomTrain(row) {
+  const c = getCustomTrains()
+  c.push(row)
+  localStorage.setItem(KEY_CUSTOM, JSON.stringify(c))
+}
+
+export function removeCustomTrain(trainId) {
+  const c = getCustomTrains().filter((t) => t.trainId !== trainId)
+  localStorage.setItem(KEY_CUSTOM, JSON.stringify(c))
 }

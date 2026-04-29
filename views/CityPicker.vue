@@ -1,8 +1,8 @@
 <template>
  <div class="city-picker-page">
-  <header class="header">
-   <span class="back"@click="goBack">返回</span>
-   <span class="title">选择城市</span>
+  <header class="header rail-topbar">
+   <span class="back" @click="goBack">‹ 返回</span>
+   <span class="title rail-title">选择城市</span>
   </header>
   <main ref="mainRef" class="main">
     <template v-for="(cities,letter) in cityGroupByLetter" :key="letter">
@@ -80,28 +80,26 @@ function goBack(){
 <style scoped>
 .city-picker-page {
   min-height: 100vh;
-  background: #f5f5f5;
+  padding-bottom: 32px;
 }
 .header {
   display: flex;
   align-items: center;
-  padding: 16px;
-  background: #fff;
-  border-bottom: 1px solid #eee;
+  padding: 14px 20px;
 }
 .back {
   cursor: pointer;
-  color: #409eff;
+  color: #7dd3fc;
   margin-right: 16px;
   font-size: 16px;
 }
 .title {
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a2e;
+  color: #f1f5f9;
 }
 .main {
-  padding: 12px;
+  padding: 16px;
   max-width: 600px;
   margin: 0 auto;
 }
@@ -109,34 +107,44 @@ function goBack(){
   margin-bottom: 16px;
 }
 .letter-title {
-  padding: 8px 12px;
-  background: #f0f0f0;
-  color: #666;
-  font-size: 14px;
+  padding: 8px 14px;
+  background: rgba(15, 23, 42, 0.45);
+  color: #94a3b8;
+  font-size: 13px;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  letter-spacing: 0.08em;
 }
 .city-list {
-  background: #fff;
-  border-radius: 4px;
+  background: linear-gradient(
+    165deg,
+    rgba(30, 41, 59, 0.55) 0%,
+    rgba(15, 23, 42, 0.88) 100%
+  );
+  backdrop-filter: blur(18px);
+  border-radius: 16px;
   overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 .city-item {
   padding: 14px 16px;
   font-size: 16px;
-  color: #1a1a2e;
-  border-bottom: 1px solid #f0f0f0;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
   cursor: pointer;
+  transition: background 0.18s ease;
 }
 .city-item:last-child {
   border-bottom: none;
 }
 .city-item:hover {
-  background: #f5f7fa;
+  background: rgba(56, 189, 248, 0.08);
 }
 .city-item-active {
-  background: #ecf5ff !important;
-  color: #409eff;
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.18), rgba(99, 102, 241, 0.1)) !important;
+  color: #e0f2fe;
   font-weight: 600;
 }
 </style>

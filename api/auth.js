@@ -2,25 +2,49 @@
  * 登录 / 注册接口（遵循 登录注册接口契约.md）
  */
 import request from './request.js'
-
-// 无后端时设为 true，使用 Mock 数据，便于在 Cursor 中仅运行前端体验流程；接真实后端时改为 false
-const ENABLE_MOCK = true
+import { ENABLE_MOCK } from './config.js'
+import { appendUserRegistry, getUserRegistry } from '../data/mockPersistence.js'
 
 function mockRegister(form) {
+  const username = form?.username?.trim() || 'user'
+  if (username === 'admin') {
+    return Promise.reject(new Error('该用户名不可注册'))
+  }
+  if (getUserRegistry().some((u) => u.username === username)) {
+    return Promise.reject(new Error('用户名已存在'))
+  }
+  const userId = Date.now()
+  appendUserRegistry({
+    userId,
+    username,
+    phone: form?.phone || '',
+    idCard: form?.idCard || '',
+    registeredAt: new Date().toISOString(),
+    role: 'user'
+  })
   return Promise.resolve({
     code: 0,
     message: '注册成功',
-    data: { userId: 1, username: form?.username || 'user' }
+    data: { userId, username }
   })
 }
 function mockLogin(data) {
+  const username = data?.username?.trim() || 'user'
+  const role = username === 'admin' ? 'admin' : 'user'
+  const knownIds = { admin: 0, demo: 2 }
+  const reg = getUserRegistry().find((u) => u.username === username)
+  const userId =
+    knownIds[username] !== undefined
+      ? knownIds[username]
+      : reg?.userId ?? 1
   return Promise.resolve({
     code: 0,
     message: '登录成功',
     data: {
       token: 'mock-token-' + Date.now(),
-      userId: 1,
-      username: data?.username || 'user'
+      userId,
+      username,
+      role
     }
   })
 }

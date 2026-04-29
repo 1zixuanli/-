@@ -1,11 +1,11 @@
 <template>
   <div class="train-list-page">
-    <header class="header">
+    <header class="header rail-topbar">
       <span class="back" @click="goBack">‹ 返回</span>
-      <span class="title">车票列表</span>
+      <span class="title rail-title">车票列表</span>
     </header>
 
-    <div class="summary">
+    <div class="summary rail-surface">
       <span>{{ from }}</span>
       <span class="arrow">→</span>
       <span>{{ to }}</span>
@@ -14,15 +14,15 @@
 
     <div class="query-hint" v-if="ticketType !== 'normal' || highSpeedFilter">
       <span v-if="highSpeedFilter">仅显示高铁/动车</span>
-      <span v-if="ticketType === 'student'"> · 学生票（票价按 75% 展示，mock）</span>
+      <span v-if="ticketType === 'student'"> · 学生票（票价按 75% 展示）</span>
+      <span v-if="ticketType === 'group'"> · 团体票（票价按 95% 展示）</span>
     </div>
 
     <div v-loading="loading" class="main">
-      <el-e
-      mpty v-if="!loading && !errorMsg && list.length === 0" description="暂无车次" />
+      <el-empty v-if="!loading && !errorMsg && list.length === 0" description="暂无车次" />
       <el-alert v-if="errorMsg" type="error" :title="errorMsg" show-icon class="mb" />
 
-      <div v-for="row in list" :key="row.trainId" class="train-card">
+      <div v-for="row in list" :key="row.trainId" class="train-card rail-panel">
         <div class="train-head">
           <span class="train-no">{{ row.trainNo }}</span>
           <span class="time">{{ row.departTime }} — {{ row.arriveTime }}</span>
@@ -57,7 +57,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { fetchTrainList } from '../api/train.js'
 
 const route = useRoute()
@@ -71,16 +71,47 @@ const ticketType = computed(() => (route.query.ticketType || 'normal').toString(
 const highSpeedFilter = computed(() => route.query.highSpeedOnly === '1')
 
 function displayPrice(price) {
+  let p = Number(price)
   if (ticketType.value === 'student') {
-    return Math.round(Number(price) * 0.75)
+    return Math.round(p * 0.75)
   }
-  return price
+  if (ticketType.value === 'group') {
+    return Math.round(p * 0.95)
+  }
+  return p
 }
-function onReserve(row) {
-  ElMessage.success(`预订 ${row.trainNo} (后续接下单页/接口)`)
+
+function totalRemain(row) {
+  return (row.seatTypes || []).reduce((s, x) => s + (x.remainCount || 0), 0)
+}
+
 const loading = ref(false)
 const errorMsg = ref('')
 const list = ref([])
+
+function onReserve(row) {
+  if (totalRemain(row) <= 0) {
+    ElMessageBox.alert('当前车票已售完，无法预定', '提示', {
+      type: 'warning',
+      confirmButtonText: '知道了'
+    })
+    return
+  }
+  router.push({
+    path: '/order/confirm',
+    query: {
+      trainId: row.trainId,
+      trainNo: row.trainNo,
+      from: row.fromStation,
+      to: row.toStation,
+      date: route.query.date,
+      ticketType: route.query.ticketType || 'normal',
+      highSpeedOnly: route.query.highSpeedOnly || '0',
+      departTime: row.departTime,
+      arriveTime: row.arriveTime
+    }
+  })
+}
 
 async function loadList() {
   loading.value = true
@@ -123,40 +154,44 @@ function goBack() {
 <style scoped>
 .train-list-page {
   min-height: 100vh;
-  background: #f5f5f5;
+  padding-bottom: 32px;
 }
 .header {
   display: flex;
   align-items: center;
-  padding: 16px;
-  background: #1a1a2e;
-  color: #fff;
+  padding: 14px 20px;
 }
 .back {
   cursor: pointer;
   margin-right: 16px;
   font-size: 18px;
+  color: #7dd3fc;
 }
 .title {
   font-size: 18px;
   font-weight: 600;
+  color: #f1f5f9;
 }
 .summary {
-  padding: 12px 16px;
-  background: #fff;
-  border-bottom: 1px solid #eee;
+  margin: 16px 16px 0;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   font-size: 16px;
+  color: #f1f5f9;
+  font-weight: 600;
+  border-radius: 14px;
 }
 .summary .arrow {
-  color: #409eff;
+  color: #38bdf8;
+  font-weight: 400;
 }
 .summary .date {
   margin-left: auto;
-  color: #666;
+  color: #94a3b8;
   font-size: 14px;
+  font-weight: 500;
 }
 .main {
   padding: 16px;
@@ -167,11 +202,8 @@ function goBack() {
   margin-bottom: 12px;
 }
 .train-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+  margin-bottom: 16px;
 }
 .train-head {
   display: flex;
@@ -181,25 +213,26 @@ function goBack() {
 }
 .train-no {
   font-size: 20px;
-  font-weight: 700;
-  color: #1a1a2e;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #f8fafc;
 }
 .time {
-  color: #666;
+  color: #94a3b8;
   font-size: 14px;
 }
 .station-line {
   font-size: 15px;
-  color: #333;
+  color: #cbd5e1;
   margin-bottom: 12px;
 }
 .station-line .to {
   margin: 0 8px;
-  color: #409eff;
+  color: #38bdf8;
 }
 .seats {
-  border-top: 1px solid #f0f0f0;
-  padding-top: 8px;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+  padding-top: 10px;
 }
 .seat-row {
   display: flex;
@@ -209,28 +242,31 @@ function goBack() {
   font-size: 14px;
 }
 .seat-row .price {
-  color: #f56c6c;
-  font-weight: 600;
+  color: #fda4af;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 .no-ticket {
-  color: #909399;
+  color: #64748b;
 }
 .duration {
   font-size: 12px;
-  color: #909399;
+  color: #64748b;
   margin-left: 8px;
 }
 .query-hint {
-  padding: 8px 16px;
+  margin: 12px 16px 0;
+  padding: 10px 16px;
   font-size: 12px;
-  color: #909399;
-  background: #fafafa;
-  border-bottom: 1px solid #eee;
+  color: #cbd5e1;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
 }
 .card-actions {
   margin-top: 12px;
-  padding-top: 8px;
-  border-top: 1px dashed #eee;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.2);
   text-align: right;
 }
 </style>

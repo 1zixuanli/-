@@ -1,0 +1,39 @@
+【整项目如何跑通 — 按顺序做下面四步即可】
+  ① MySQL 保持运行（可用 tools\start-mysql-无需管理员.bat 启动用户模式 MySQL）。
+  ② 在项目根目录执行一次数据库导入（若已导入过可跳过），任选其一：
+       npm run import:db
+     或 powershell -ExecutionPolicy Bypass -File .\scripts\import-mysql.ps1
+    （会建库 rail_ticket 并写入车次/用户/演示订单；密码读 mysql-password.txt，须与 application.yml 一致）
+  ③ 启动后端：双击 run-backend.bat（或 PowerShell：.\scripts\run-backend.ps1），看到 Started 且无报错。
+  ④ 新开终端，在项目根目录执行 npm run dev，浏览器打开 http://localhost:5173
+     登录：admin / admin123（或 demo / demo123）
+  说明：前端里的「代理」会把地址里带 /api 的请求自动转到 http://localhost:8080 后端，无需你手写后端网址。
+
+一、已完成的安装（本机已执行）
+  1. 前端：在项目根目录执行过 npm install（依赖在 node_modules）。
+  2. 后端构建工具：Apache Maven 3.9.14 已下载到 tools\apache-maven-3.9.14（无需再装全局 mvn）。
+  3. Java：本机已有 JDK（如 C:\Program Files\Java\jdk1.8.0_291 或注册表中的 JDK 17）。
+
+二、MySQL 数据库一键初始化（推荐）
+  1. 在项目根 src 目录执行：node scripts\gen-mysql-init.mjs
+     （会生成 rail-backend\scripts\init_rail_ticket.sql：建库、建表、约 50 条车次、演示用户、几条演示订单）
+  2. 请确认 mysql-password.txt 中填写的是你本机当前的 MySQL root 密码。
+  3. 执行：powershell -ExecutionPolicy Bypass -File .\scripts\import-mysql.ps1
+  4. 若数据库账号密码不是默认值，请通过环境变量或 application.yml 调整，使其与 mysql-password.txt 一致。
+  5. 后端已关闭 spring.sql.init（建表以 import 的 SQL 为准）；若库被删空，请重新执行 npm run import:db。
+
+三、启动顺序（接上面数据库已就绪时）
+  1. 确保 MySQL 服务已启动。
+  2. 若未执行过「二」中的脚本，也可手动建库：CREATE DATABASE rail_ticket ...
+     账号密码若与 rail-backend\application.yml 不一致，请修改该文件中的 spring.datasource。
+  3. 启动后端：双击 run-backend.bat（或在 PowerShell 中执行：.\scripts\run-backend.ps1）
+     默认地址：http://localhost:8080
+  4. 启动前端：在项目根目录执行 npm run dev
+     浏览器访问终端里提示的地址（一般为 http://localhost:5173）
+     管理员登录：admin / admin123
+
+四、若需重新下载 Maven（换了电脑或删了 tools 文件夹）
+  在 PowerShell 中执行：.\scripts\install-tools.ps1
+
+五、仅前端离线演示（不连数据库）
+  在 api\config.js 中把 ENABLE_MOCK 改为 true，并注释 vite.config.js 里对 /api 的 proxy。

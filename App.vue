@@ -19,7 +19,9 @@ provide('toCity', toCity)
   padding: 0;
   box-sizing: border-box;
 }
-html, body, #app {
-  height: 100%;
+html,
+body,
+#app {
+  min-height: 100%;
 }
 </style>
