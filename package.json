@@ -1,0 +1,14 @@
+{
+  "scripts": {
+    "start": "react-imvc start",
+    "build": "react-imvc build",
+    "test": "react-imvc test"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.29.2",
+    "axios": "^1.6.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-imvc": "^3.6.0"
+  }
+}
