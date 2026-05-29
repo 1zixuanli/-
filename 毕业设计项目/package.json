@@ -1,0 +1,29 @@
+{
+  "name": "rail-ticket-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "gen:mysql": "node scripts/gen-mysql-init.mjs",
+    "import:db": "node scripts/import-mysql.mjs"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "element-plus": "^2.9.1",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0",
+    "vuex": "^4.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.6.2",
+    "bcryptjs": "^3.0.3",
+    "mysql2": "^3.11.5",
+    "vite": "^4.5.9"
+  },
+  "engines": {
+    "node": ">=14.18.0"
+  }
+}

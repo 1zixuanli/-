@@ -1,0 +1,8 @@
+node_modules/
+dist/
+rail-backend/target/
+.mysql-local/
+mysql-password.txt
+mysql-port.txt
+.env
+.env.local

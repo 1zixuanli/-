@@ -1,0 +1,11 @@
+# 可选：一键启动 MySQL（与 application.yml 中 root/root 一致）
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: rail-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rail_ticket
+    ports:
+      - "3306:3306"
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci

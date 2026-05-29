@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  # 表结构由 npm run import:db（init_rail_ticket.sql）创建；避免每次启动重复执行 classpath:schema.sql
+  sql:
+    init:
+      mode: never
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3307/rail_ticket?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: Lzx040605
+    driver-class-name: com.mysql.cj.jdbc.Driver
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+jwt:
+  secret: rail-ticket-thesis-change-in-production-min-32-chars!!
+  expire-hours: 168
+
+logging:
+  level:
+    com.rail.ticket.mapper: debug
